@@ -3,7 +3,7 @@
 export async function POST(req: Request) {
   try {
     const { reviewText } = await req.json();
-    const API_KEY = "AIzaSyCZ38X-YaAxxREZBU7iyIN_F2_4Atr5OQ8"; 
+    const API_KEY = process.env.GEMINI_API_KEY;
     
     // Gọi thẳng model 3.5 mới nhất của năm 2026
     const url = `https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${API_KEY}`;
