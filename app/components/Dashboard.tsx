@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [hotelSearch, setHotelSearch] = useState("");
 
   // 1. SỬA LẠI: Lấy 5 dữ liệu mới nhất từ Supabase theo tên khách sạn
+// SỬA LẠI: Lấy 5 dữ liệu mới nhất CHƯA XỬ LÝ (Pending)
   const fetchFromSupabase = async () => {
     if (!hotelSearch.trim()) {
       alert("Vui lòng nhập tên khách sạn để Fetch!");
@@ -24,9 +25,10 @@ export default function Dashboard() {
       const { data, error } = await supabase
         .from('reviews')
         .select('*')
-        .ilike('content', `%${hotelSearch}%`) // Lọc nội dung có chứa tên khách sạn
+        .ilike('content', `%${hotelSearch}%`) // Lọc theo tên khách sạn
+        .eq('status', 'Pending')             // 🔥 QUAN TRỌNG: Chỉ lấy những cái chưa trả lời
         .order('created_at', { ascending: false }) // Mới nhất lên đầu
-        .limit(5); // CHỈ LẤY 5 REVIEW
+        .limit(5);
 
       if (error) throw error;
 
@@ -38,11 +40,11 @@ export default function Dashboard() {
       }));
 
       setReviews(formatted);
-      setSelectedReview(null); // Reset lại vùng chi tiết khi fetch mới
+      setSelectedReview(null);
       setAiResponses(null);
       
       if (formatted.length === 0) {
-        alert("Không tìm thấy review nào cho khách sạn này!");
+        alert("Không còn review nào đang chờ xử lý cho khách sạn này!");
       }
     } catch (err: any) {
       alert("Lỗi Fetch DB: " + err.message);
@@ -50,7 +52,7 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-
+  
   const handleGenerateAI = async (content: string) => {
     setLoading(true);
     try {
@@ -128,7 +130,7 @@ export default function Dashboard() {
               boxShadow: '0 2px 6px rgba(26,115,232,0.3)'
             }}
           >
-            {loading ? '⌛ Đang Fetch...' : '🔍 Fetch'}
+            {loading ? '⌛ Đang Fetch...' : '🔍 Tìm Kiếm'}
           </button>
         </div>
       </header>
