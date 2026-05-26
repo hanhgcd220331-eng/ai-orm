@@ -1,27 +1,34 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase'; // Dấu @ đại diện cho thư mục gốc
-export async function GET() {
+import { supabase } from '@/lib/supabase';
+
+export async function POST(req: Request) {
   try {
-    // Lấy tất cả review có trạng thái 'Pending' từ Supabase
+    const { hotelName } = await req.json();
+
+    if (!hotelName) {
+      return NextResponse.json({ error: "Vui lòng nhập tên khách sạn" }, { status: 400 });
+    }
+
+    // Truy vấn Supabase: Tìm review theo tên khách sạn, lấy 5 cái mới nhất
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
-      .eq('status', 'Pending');
+      .ilike('content', `%${hotelName}%`) // Tìm kiếm tương đối (không phân biệt hoa thường)
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw error;
 
-    // Map lại dữ liệu cho đúng format Dashboard
-    const formattedReviews = (data || []).map((r: any) => ({
+    // Map lại format cho Dashboard
+    const formatted = (data || []).map((r: any) => ({
       id: r.id.toString(),
-      customer: r.customer_name,
-      content: r.content,
-      status: r.status
+      customer: r.customer_name || "Khách hàng ẩn danh",
+      content: r.content || "",
+      status: r.status || "Pending"
     }));
 
-    return NextResponse.json(formattedReviews);
-  } catch (error) {
-    return NextResponse.json([], { status: 500 });
+    return NextResponse.json(formatted);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
